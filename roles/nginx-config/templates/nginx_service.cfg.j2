@@ -4,12 +4,12 @@
 {%- macro upstream_macro(nginx) %}
 upstream {{ nginx.upstream }} {{'{'}}
 	{% for host in groups[nginx.host_group] %}
-	{# host_name暂时没用到 #}
-    {% set host_name = hostvars[host]['ansible_hostname'] %}
-    {% set host_ip = ansible_default_ipv4.address %}
-    {% set listen_port = nginx.listen_port %}
+		{# host_name暂时没用到 #}
+		{% set host_name = hostvars[host]['ansible_hostname'] %}
+    		{% set host_ip = ansible_default_ipv4.address %}
+    		{% set listen_port = nginx.listen_port %}
 	server {{ host_ip }}:{{ listen_port }};
-    {% endfor %}
+	{% endfor %}
 {{'}'}}
 {% endmacro %}
 {%- macro location_macro(nginx) %}
@@ -17,8 +17,8 @@ location {{ nginx.location_reg }} {{ nginx.location_path }} {{'{'}}
 		{% if nginx.proxy_path is defined %}
 		proxy_pass http://{{ nginx.upstream }}{{ nginx.proxy_path }};
 		{% endif %}
-		{%- if nginx.proxy_header is defined %}
-			{%- for header in nginx.proxy_header %}
+		{%- if nginx.proxy_set_header is defined %}
+			{%- for header in nginx.proxy_set_header %}
 		proxy_set_header {{ header }};
 			{% endfor %}
 		{% endif %}

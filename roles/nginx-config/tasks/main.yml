@@ -1,20 +1,15 @@
 ---
+# 这里的project_name为传入的数据结构中的project_name这个变量
 - name: "Copying over {{ project_name }} nginx config"
   vars:
     service: "{{ item.value }}"
     nginx_templates:
       - "templates/{{ nginx_service_template }}"
     template_file: "{{ query('first_found', nginx_templates) | first }}"
-#  debug:
-#    var: service.keys()
   template:
     src: "{{ template_file }}"
     dest: "/etc/nginx/conf.d/{{ item.key }}.cfg"
     mode: "0660"
   become: true
+  # 这里project_services为传入的数据结构中的test_services变量，是个字典。字典中的每个元素都是一个服务
   with_dict: "{{ project_services }}"
-
-#- name: "debug"
-#  debug:
-#    var: service.nginx
-#  with_dict: "{{ project_services }}"
