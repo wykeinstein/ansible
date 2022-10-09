@@ -1,0 +1,42 @@
+#jinja2: lstrip_blocks: True
+{# 这里的nginx是变量文件中kairosdb这个字典的value，即nginx下的那写内容，
+定义upstream_macro，用于生成nginx配置文件的upstream部分 #}
+{%- macro upstream_macro(nginx) %}
+upstream {{ nginx.upstream }} {{'{'}}
+	{% for host in groups[nginx.host_group] %}
+	{# host_name暂时没用到 #}
+    {% set host_name = hostvars[host]['ansible_hostname'] %}
+    {% set host_ip = ansible_default_ipv4.address %}
+    {% set listen_port = nginx.listen_port %}
+	server {{ host_ip }}:{{ listen_port }};
+    {% endfor %}
+{{'}'}}
+{% endmacro %}
+{%- macro location_macro(nginx) %}
+location {{ nginx.location_reg }} {{ nginx.location_path }} {{'{'}}
+		{% if nginx.proxy_path is defined %}
+		proxy_pass http://{{ nginx.upstream }}{{ nginx.proxy_path }};
+		{% endif %}
+		{%- if nginx.proxy_header is defined %}
+			{%- for header in nginx.proxy_header %}
+		proxy_set_header {{ header }};
+			{% endfor %}
+		{% endif %}
+	{{'}'}}
+{% endmacro %}
+{# 定义server_macro宏 #}
+{%- macro server_macro(nginx) %}
+server {{'{'}}
+	listen {{ nginx.port }};
+	server_name  localhost;
+{# 这里调用location_macro宏，因为location_macro那里已经有了缩进，所以这里要顶格写输出才美观 #}
+	{{ caller() }}
+{{'}'}}
+{% endmacro %}
+{# 将service中nginx的value取出 #}
+{% set nginx = service.nginx %}
+{{ upstream_macro(nginx) }}
+{# 这里调用server_macro宏，生成nginx配置文件的server部分 #}
+{%- call() server_macro(nginx) %}
+{{ location_macro(nginx) }}
+{% endcall %}

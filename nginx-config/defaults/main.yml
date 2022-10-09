@@ -1,0 +1,2 @@
+---
+nginx_service_template: "nginx_service.cfg.j2"

@@ -1,0 +1,20 @@
+---
+- name: "Copying over {{ project_name }} nginx config"
+  vars:
+    service: "{{ item.value }}"
+    nginx_templates:
+      - "templates/{{ nginx_service_template }}"
+    template_file: "{{ query('first_found', nginx_templates) | first }}"
+#  debug:
+#    var: service.keys()
+  template:
+    src: "{{ template_file }}"
+    dest: "/etc/nginx/conf.d/{{ item.key }}.cfg"
+    mode: "0660"
+  become: true
+  with_dict: "{{ project_services }}"
+
+#- name: "debug"
+#  debug:
+#    var: service.nginx
+#  with_dict: "{{ project_services }}"
